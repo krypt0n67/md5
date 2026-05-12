@@ -35,3 +35,36 @@ def _rol(word, shift):
     word &= _MASK
     return ((word << shift) | (word >> (32 - shift))) & _MASK
 
+
+def _compress(state, block):
+    words = struct.unpack('<16I', block)
+    a, b, c, d = state
+    for step in range(64):
+        if step < 16:
+            function, index = (b & c) | (~b & d), step
+        elif step < 32:
+            function, index = (d & b) | (~d & c), (5 * step + 1) % 16
+        elif step < 48:
+            function, index = b ^ c ^ d, (3 * step + 5) % 16
+        else:
+            function, index = c ^ (b | ~d), (7 * step) % 16
+        mixed = a + function + _K[step] + words[index]
+        a, d, c, b = d, c, b, (b + _rol(mixed, _SHIFTS[step])) & _MASK
+    return [(old + new) & _MASK for old, new in zip(state, (a, b, c, d))]
+
+
+def digest(data):
+    data = bytes(data)
+    if len(data) >= 56:
+        raise NotImplementedError('Only messages shorter than 56 bytes are implemented')
+    size = len(data)
+    zeros = (55 - size) % 64
+    padded = data + b'\x80' + b'\x00' * zeros + struct.pack('<Q', size * 8)
+    state = list(_IV)
+    for offset in range(0, len(padded), 64):
+        state = _compress(state, padded[offset:offset + 64])
+    return struct.pack('<4I', *state)
+
+
+def hexdigest(data):
+    return digest(data).hex()
