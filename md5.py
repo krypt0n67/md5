@@ -55,10 +55,8 @@ def _compress(state, block):
 
 def digest(data):
     data = bytes(data)
-    if len(data) >= 56:
-        raise NotImplementedError('Only messages shorter than 56 bytes are implemented')
     size = len(data)
-    zeros = (55 - size) % 64
+    zeros = 55 - (size % 64)
     padded = data + b'\x80' + b'\x00' * zeros + struct.pack('<Q', size * 8)
     state = list(_IV)
     for offset in range(0, len(padded), 64):
