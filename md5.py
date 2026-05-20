@@ -56,7 +56,7 @@ def _compress(state, block):
 def digest(data):
     data = bytes(data)
     size = len(data)
-    zeros = 55 - (size % 64)
+    zeros = (55 - size) % 64
     padded = data + b'\x80' + b'\x00' * zeros + struct.pack('<Q', size * 8)
     state = list(_IV)
     for offset in range(0, len(padded), 64):
