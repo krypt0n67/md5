@@ -53,16 +53,51 @@ def _compress(state, block):
     return [(old + new) & _MASK for old, new in zip(state, (a, b, c, d))]
 
 
+class MD5:
+    """Incremental hash: update(), digest(), hexdigest(), and independent copy()."""
+
+    name = 'md5'
+    block_size = 64
+    digest_size = 16
+
+    def __init__(self, data=b''):
+        self._state = list(_IV)
+        self._buffer = b''
+        self._count = 0
+        self.update(data)
+
+    def update(self, data):
+        """Consume bytes, bytearray or memoryview; text needs explicit encoding."""
+        data = bytes(data)
+        self._count += len(data)
+        data = self._buffer + data
+        end = len(data) - len(data) % self.block_size
+        for offset in range(0, end, self.block_size):
+            self._state = _compress(self._state, data[offset:offset + self.block_size])
+        self._buffer = data[end:]
+
+
+    def digest(self):
+        """Return 16 bytes without changing this object; further updates work."""
+        clone = self
+        padding = b'\x80' + b'\x00' * ((55 - self._count) % 64)
+        length = struct.pack('<Q', (self._count * 8) & 0xFFFFFFFFFFFFFFFF)
+        clone.update(padding + length)
+        return struct.pack('<4I', *clone._state)
+
+    def hexdigest(self):
+        return self.digest().hex()
+
+
+def md5(data=b''):
+    return MD5(data)
+
+
 def digest(data):
-    data = bytes(data)
-    size = len(data)
-    zeros = (55 - size) % 64
-    padded = data + b'\x80' + b'\x00' * zeros + struct.pack('<Q', size * 8)
-    state = list(_IV)
-    for offset in range(0, len(padded), 64):
-        state = _compress(state, padded[offset:offset + 64])
-    return struct.pack('<4I', *state)
+    """One-shot byte digest, retained from the original API."""
+    return MD5(data).digest()
 
 
 def hexdigest(data):
     return digest(data).hex()
+
