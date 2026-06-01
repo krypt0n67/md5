@@ -76,10 +76,16 @@ class MD5:
             self._state = _compress(self._state, data[offset:offset + self.block_size])
         self._buffer = data[end:]
 
+    def copy(self):
+        clone = object.__new__(type(self))
+        clone._state = self._state.copy()
+        clone._buffer = self._buffer
+        clone._count = self._count
+        return clone
 
     def digest(self):
         """Return 16 bytes without changing this object; further updates work."""
-        clone = self
+        clone = self.copy()
         padding = b'\x80' + b'\x00' * ((55 - self._count) % 64)
         length = struct.pack('<Q', (self._count * 8) & 0xFFFFFFFFFFFFFFFF)
         clone.update(padding + length)
