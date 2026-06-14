@@ -107,3 +107,32 @@ def digest(data):
 def hexdigest(data):
     return digest(data).hex()
 
+
+def main(argv=None):
+    """Print checksums for binary files, or stdin when no file is given."""
+    import argparse
+    import sys
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('files', nargs='*', help='Files to hash; - reads stdin')
+    args = parser.parse_args(argv)
+    failed = False
+    for filename in args.files or ['-']:
+        try:
+            value = MD5()
+            if filename == '-':
+                for chunk in iter(lambda: sys.stdin.buffer.read(65536), b''):
+                    value.update(chunk)
+            else:
+                with open(filename, 'rb') as stream:
+                    for chunk in iter(lambda: stream.read(65536), b''):
+                        value.update(chunk)
+            print(f'{value.hexdigest()}  {filename}')
+        except OSError as error:
+            print(f'md5: {filename}: {error.strerror}', file=sys.stderr)
+            failed = True
+    return int(failed)
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())
