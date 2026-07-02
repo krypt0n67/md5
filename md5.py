@@ -68,6 +68,8 @@ class MD5:
 
     def update(self, data):
         """Consume bytes, bytearray or memoryview; text needs explicit encoding."""
+        if not isinstance(data, (bytes, bytearray, memoryview)):
+            raise TypeError('data must be bytes, bytearray or memoryview')
         data = bytes(data)
         self._count += len(data)
         data = self._buffer + data
