@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "krypt0n67-md5"
+version = "0.2.0"
+description = "Pure-Python MD5 implementation"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+authors = [{name = "krypt0n67", email = "krypt0n67@fastmail.com"}]
+dependencies = []
+
+[project.scripts]
+md5-py = "md5:main"
+
+[tool.setuptools]
+py-modules = ["md5"]
